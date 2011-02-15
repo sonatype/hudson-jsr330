@@ -24,10 +24,8 @@
 
 package com.sonatype.matrix.smoothie.internal;
 
-import com.google.inject.AbstractModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonatype.guice.bean.binders.SpaceModule;
 import org.sonatype.guice.bean.reflect.ClassSpace;
 import org.sonatype.guice.bean.reflect.URLClassSpace;
 
@@ -36,33 +34,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Helper module to install a {@link SpaceModule} with a {@link URLClassSpace} module
- * to scan classes for binding annotations.
+ * Helper to build {@link ClassSpace} instances.
  *
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @since 1.1
  */
-public class ScanpathModule
-    extends AbstractModule
+public class ClassSpaceFactory
 {
-    private static final Logger log = LoggerFactory.getLogger(ScanpathModule.class);
+    private static final Logger log = LoggerFactory.getLogger(ClassSpaceFactory.class);
 
-    private final ClassLoader parent;
-
-    private final URL[] urls;
-
-    public ScanpathModule(final ClassLoader parent, final URL[] urls) {
-        assert parent != null;
-        this.parent = parent;
-        assert urls != null;
-        this.urls = urls;
+    public ClassSpace create(final ClassLoader parent, final URL... urls) {
+        return createClassSpace(parent, urls);
     }
 
-    public ScanpathModule(final ClassLoader parent, final Class... types) {
-        this(parent, scanTypes(types));
+    public ClassSpace create(final ClassLoader parent, final Class... types) {
+        return createClassSpace(parent, scanTypes(types));
     }
 
-    private static URL[] scanTypes(final Class[] types) {
+    private URL[] scanTypes(final Class[] types) {
         assert types != null;
         List<URL> path = new ArrayList<URL>();
         for (Class type : types) {
@@ -71,19 +60,13 @@ public class ScanpathModule
         return path.toArray(new URL[path.size()]);
     }
 
-    @Override
-    protected void configure() {
-        install(new SpaceModule(createClassSpace()));
-    }
-
-    protected ClassSpace createClassSpace() {
+    private ClassSpace createClassSpace(final ClassLoader parent, final URL[] urls) {
         if (log.isDebugEnabled()) {
             log.debug("Path:");
             for (URL url : urls) {
                 log.debug("  {}", url);
             }
         }
-
         return new URLClassSpace(parent, urls);
     }
 }

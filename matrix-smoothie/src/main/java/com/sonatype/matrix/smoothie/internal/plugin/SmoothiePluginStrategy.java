@@ -25,6 +25,9 @@
 package com.sonatype.matrix.smoothie.internal.plugin;
 
 import com.sonatype.matrix.smoothie.SmoothieContainer;
+import com.sonatype.matrix.smoothie.internal.extension.ExtensionLocator;
+
+import hudson.ExtensionComponent;
 import hudson.Plugin;
 import hudson.PluginStrategy;
 import hudson.PluginWrapper;
@@ -46,7 +49,7 @@ import java.util.List;
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @since 0.2
  */
-@Named
+@Named("default")
 @Singleton
 public class SmoothiePluginStrategy
     implements PluginStrategy
@@ -57,12 +60,15 @@ public class SmoothiePluginStrategy
 
     private final PluginWrapperFactory pluginFactory;
 
+    private final ExtensionLocator extensionLocator;
+
     @Inject
-    public SmoothiePluginStrategy(final SmoothieContainer container, final PluginWrapperFactory pluginFactory) {
+    public SmoothiePluginStrategy(final SmoothieContainer container, final PluginWrapperFactory pluginFactory, final @Named("default") ExtensionLocator extensionLocator) {
         assert container != null;
         this.container = container;
         assert pluginFactory != null;
         this.pluginFactory = pluginFactory;
+        this.extensionLocator = extensionLocator;
     }
 
     private String basename(String name) {
@@ -224,5 +230,10 @@ public class SmoothiePluginStrategy
     public void initializeComponents(final PluginWrapper plugin) {
         assert plugin != null;
         throw new Error("Unused operation");
+    }
+
+    @Override
+    public <T> List<ExtensionComponent<T>> findComponents(final Class<T> type, final Hudson hudson) {
+        return extensionLocator.locate(type);
     }
 }

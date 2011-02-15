@@ -24,38 +24,14 @@
 
 package com.sonatype.matrix.smoothie.internal.extension;
 
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import com.sonatype.matrix.smoothie.Smoothie;
-import hudson.Extension;
 import hudson.ExtensionComponent;
-import hudson.ExtensionFinder;
-import hudson.model.Hudson;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
- * Delegates to {@link ExtensionFinder} implementation bound in Guice context.
- *
- * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @since 0.2
+ * Allows {@link hudson.PluginStrategy} complete control over how extensions are found.
  */
-@Extension
-public class DelegatingExtensionFinder
-    extends ExtensionFinder
+public interface ExtensionLocator
 {
-    private final ExtensionFinder delegate;
-
-    public DelegatingExtensionFinder() {
-        this.delegate = Smoothie.getContainer().get(Key.get(ExtensionFinder.class, Names.named("default")));
-    }
-
-    public ExtensionFinder getDelegate() {
-        return delegate;
-    }
-
-    @Override
-    public <T> Collection<ExtensionComponent<T>> find(final Class<T> type, final Hudson hudson) {
-        return getDelegate().find(type, hudson);
-    }
+    <T> List<ExtensionComponent<T>> locate(Class<T> type);
 }

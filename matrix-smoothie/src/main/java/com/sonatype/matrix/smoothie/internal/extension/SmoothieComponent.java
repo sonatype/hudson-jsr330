@@ -33,39 +33,37 @@ import java.lang.annotation.Annotation;
 /**
  * Smoothie component extension holder.
  *
- * This primarily exists to provide better {@link #toString} as well as to expose the {@link QualifiedBean}.
- *
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @since 0.2
  */
 public class SmoothieComponent<T>
     extends ExtensionComponent<T>
 {
-    private final QualifiedBean<Annotation,T> item;
+    private final QualifiedBean<Annotation,T> bean;
 
-    public SmoothieComponent(final QualifiedBean<Annotation,T> item) {
-        super(item.getValue(), Smoothie.priorityOf(item));
-        this.item = item;
+    public SmoothieComponent(final QualifiedBean<Annotation,T> bean) {
+        super(bean.getValue(), Smoothie.priorityOf(bean));
+        this.bean = bean;
+    }
+
+    public QualifiedBean<Annotation,T> getBean() {
+        return bean;
     }
 
     public Class<?> getType() {
-        return getItem().getValue().getClass();
+        return getBean().getImplementationClass();
     }
 
     public double getPriority() {
         return ordinal();
     }
 
-    public QualifiedBean<Annotation,T> getItem() {
-        return item;
-    }
-
     @Override
     public String toString() {
         return "SmoothieComponent{" +
-            "type=" + getType().getSimpleName() +
+            "type=" + getType() +
             ", priority=" + getPriority() +
-            ", item=" + item +
+            ", bean=" + bean +
             '}';
     }
 }

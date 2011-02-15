@@ -25,10 +25,10 @@
 package com.sonatype.matrix.smoothie.injecto.internal;
 
 import com.google.inject.Injector;
-import com.sonatype.matrix.smoothie.internal.OID;
 import com.sonatype.matrix.smoothie.SmoothieContainer;
 import com.sonatype.matrix.smoothie.injecto.Injectable;
 import com.sonatype.matrix.smoothie.injecto.Injectomatic;
+import com.sonatype.matrix.smoothie.internal.OID;
 import com.sonatype.matrix.smoothie.internal.SmoothieContainerImpl;
 import com.sonatype.matrix.smoothie.internal.plugin.PluginClassLoader;
 import org.slf4j.Logger;

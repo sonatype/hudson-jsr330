@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Attributes;
 
 /**
  * Provides {@link PluginWrapper} creation facilities.
@@ -62,7 +63,7 @@ public class PluginWrapperFactory
         this.delegate = new ClassicPluginStrategy(plugins)
         {
             @Override
-            protected ClassLoader createClassLoader(final List<File> files, final ClassLoader parent) throws IOException {
+            protected ClassLoader createClassLoader(List<File> files, ClassLoader parent, Attributes atts) throws IOException {
                 assert files != null;
                 List<URL> urls = new ArrayList<URL>(files.size());
                 for (File file : files) {

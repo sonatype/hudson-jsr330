@@ -27,8 +27,11 @@ package com.sonatype.matrix.smoothie.internal;
 import com.sonatype.matrix.smoothie.Smoothie;
 import com.sonatype.matrix.smoothie.SmoothieContainer;
 import com.sonatype.matrix.smoothie.injecto.internal.InjectomaticAspectHelper;
+import com.sonatype.matrix.smoothie.internal.extension.ExtensionModule;
+import hudson.model.Hudson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonatype.guice.bean.reflect.ClassSpace;
 
 /**
  * Bootstraps the container.
@@ -41,16 +44,17 @@ public class SmoothieContainerBootstrap
     private static final Logger log = LoggerFactory.getLogger(SmoothieContainerBootstrap.class);
 
     public SmoothieContainer bootstrap() {
+        return bootstrap(getClass().getClassLoader(), Hudson.class, Smoothie.class);
+    }
+
+    public SmoothieContainer bootstrap(final ClassLoader classLoader, final Class... types) {
         log.info("Bootstrapping Smoothie");
 
         InjectomaticAspectHelper.setEnabled(true);
 
-        ScanpathModule cp = new ScanpathModule(
-            getClass().getClassLoader(),
-            Smoothie.class
-        );
+        ClassSpace space = new ClassSpaceFactory().create(classLoader, types);
 
-        SmoothieContainer container = new SmoothieContainerImpl(cp);
+        SmoothieContainer container = new SmoothieContainerImpl(new ExtensionModule(space));
         Smoothie.setContainer(container);
 
         return container;

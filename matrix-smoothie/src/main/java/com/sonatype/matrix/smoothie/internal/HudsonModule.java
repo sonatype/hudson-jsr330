@@ -26,7 +26,6 @@ package com.sonatype.matrix.smoothie.internal;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-
 import hudson.PluginManager;
 import hudson.TcpSlaveAgentListener;
 import hudson.model.FingerprintMap;

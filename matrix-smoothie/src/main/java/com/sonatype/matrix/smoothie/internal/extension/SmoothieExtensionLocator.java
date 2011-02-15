@@ -27,8 +27,6 @@ package com.sonatype.matrix.smoothie.internal.extension;
 import com.google.inject.Key;
 import com.sonatype.matrix.smoothie.SmoothieContainer;
 import hudson.ExtensionComponent;
-import hudson.ExtensionFinder;
-import hudson.model.Hudson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonatype.guice.bean.locators.QualifiedBean;
@@ -38,40 +36,40 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
- * Smoothie {@link ExtensionFinder}.
+ * Smoothie {@link ExtensionLocator}.
  *
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @since 0.2
+ * @since 1.1
  */
 @Named
 @Singleton
-public class SmoothieExtensionFinder
-    extends ExtensionFinder
+public class SmoothieExtensionLocator
+    implements ExtensionLocator
 {
-    private static final Logger log = LoggerFactory.getLogger(SmoothieExtensionFinder.class);
+    private static final Logger log = LoggerFactory.getLogger(SmoothieExtensionLocator.class);
 
     private final SmoothieContainer container;
 
     @Inject
-    public SmoothieExtensionFinder(final SmoothieContainer container) {
-        assert container != null;
-        this.container = container;
+    public SmoothieExtensionLocator(final SmoothieContainer container) {
+        this.container = checkNotNull(container);
     }
 
     /**
      * Look up extension type lists by asking the container for types with any {@link javax.inject.Qualifier} adorned annotation.
      */
     @Override
-    public <T> Collection<ExtensionComponent<T>> find(final Class<T> type, final Hudson hudson) {
-        assert type != null;
+    public <T> List<ExtensionComponent<T>> locate(final Class<T> type) {
+        checkNotNull(type);
 
-        if (log.isTraceEnabled()) {
-            log.trace("Finding extensions: {}", type.getName());
-        }
+//        if (log.isTraceEnabled()) {
+            log.info("Finding extensions: {}", type.getName());
+//        }
 
         List<ExtensionComponent<T>> components = new ArrayList<ExtensionComponent<T>>();
         try {
@@ -79,16 +77,22 @@ public class SmoothieExtensionFinder
             for (QualifiedBean<Annotation,T> item : items) {
                 // Use our container for extendability and logging simplicity.
                 SmoothieComponent<T> component = new SmoothieComponent<T>(item);
-                log.trace("Found: {}", component);
-                components.add(component);
+                log.info("Found: {}", component);
+                if (component.getInstance() != null) { // filter out null components (ie. uninitialized @Extension fields)
+                    components.add(component);
+                }
             }
 
-            if (log.isErrorEnabled()) {
-                log.debug("Found {} {} components", components.size(), type.getName());
-            }
+//            if (log.isDebugEnabled()) {
+                log.info("Found {} {} components", components.size(), type.getName());
+//            }
         }
         catch (Exception e) {
             log.error("Extension discovery failed", e);
+        }
+
+        if (components.isEmpty()) {
+            log.warn("No components of type '{}' discovered", type.getName());
         }
 
         return components;

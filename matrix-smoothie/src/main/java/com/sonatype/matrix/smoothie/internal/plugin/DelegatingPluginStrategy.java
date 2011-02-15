@@ -29,11 +29,16 @@ import com.google.inject.name.Names;
 import com.sonatype.matrix.smoothie.Smoothie;
 import com.sonatype.matrix.smoothie.internal.HudsonModule;
 import hudson.PluginManager;
+import hudson.model.Hudson;
+import hudson.ExtensionComponent;
 import hudson.PluginStrategy;
 import hudson.PluginWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Delegates to {@link PluginStrategy} implementation bound in Guice context.
@@ -44,27 +49,38 @@ import java.io.IOException;
 public class DelegatingPluginStrategy
     implements PluginStrategy
 {
+    private static final Logger log = LoggerFactory.getLogger(DelegatingPluginStrategy.class);
+
     private final PluginStrategy delegate;
 
     public DelegatingPluginStrategy(final PluginManager plugins) {
         // HACK: Need to configure the PluginManager instance so that bootstrap components can wire correctly
         HudsonModule.bind(plugins);
         this.delegate = Smoothie.getContainer().get(Key.get(PluginStrategy.class, Names.named("default")));
+        log.info("Delegate: {}", delegate);
     }
 
     public PluginStrategy getDelegate() {
         return delegate;
     }
 
+    @Override
     public PluginWrapper createPluginWrapper(final File archive) throws IOException {
         return getDelegate().createPluginWrapper(archive);
     }
 
+    @Override
     public void load(final PluginWrapper plugin) throws IOException {
         getDelegate().load(plugin);
     }
 
+    @Override
     public void initializeComponents(final PluginWrapper plugin) {
         getDelegate().initializeComponents(plugin);
+    }
+
+    @Override
+    public <T> List<ExtensionComponent<T>> findComponents(final Class<T> type, final Hudson hudson) {
+        return getDelegate().findComponents(type, hudson);
     }
 }

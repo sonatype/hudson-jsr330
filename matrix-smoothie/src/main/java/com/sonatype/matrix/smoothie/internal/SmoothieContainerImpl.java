@@ -25,17 +25,21 @@
 package com.sonatype.matrix.smoothie.internal;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.name.Names;
 import com.sonatype.matrix.smoothie.SmoothieContainer;
-import com.sonatype.matrix.smoothie.internal.extension.SmoothieExtensionFinder;
+import com.sonatype.matrix.smoothie.internal.extension.ExtensionLocator;
+import com.sonatype.matrix.smoothie.internal.extension.SezPozExtensionModule;
+import com.sonatype.matrix.smoothie.internal.extension.SmoothieExtensionLocator;
 import com.sonatype.matrix.smoothie.internal.plugin.PluginClassLoader;
 import com.sonatype.matrix.smoothie.internal.plugin.SmoothiePluginStrategy;
 import com.thoughtworks.xstream.converters.reflection.ReflectionProvider;
 import com.thoughtworks.xstream.core.JVM;
-import hudson.ExtensionFinder;
+import hudson.ClassicPluginStrategy;
 import hudson.PluginStrategy;
 import hudson.PluginWrapper;
 import org.slf4j.Logger;
@@ -74,6 +78,13 @@ public class SmoothieContainerImpl
 
     public SmoothieContainerImpl(final Module... modules) {
         root = Guice.createInjector(new WireModule(new BootModule(modules)));
+
+        // HACK:
+        log.info("Root bindings:");
+        for (Map.Entry<Key<?>,Binding<?>> entry : root.getAllBindings().entrySet()) {
+            log.info("  {} -> {}", entry.getKey(), entry.getValue());
+        }
+
         locator.add(root);
     }
 
@@ -104,8 +115,8 @@ public class SmoothieContainerImpl
             bind(MutableBeanLocator.class).toInstance(locator);
             bind(SmoothieContainer.class).toInstance(SmoothieContainerImpl.this);
             bind(ReflectionProvider.class).toInstance(reflection);
-            bind(PluginStrategy.class).to(SmoothiePluginStrategy.class);
-            bind(ExtensionFinder.class).to(SmoothieExtensionFinder.class);
+            bind(PluginStrategy.class).annotatedWith(Names.named("default")).to(SmoothiePluginStrategy.class);
+            bind(ExtensionLocator.class).annotatedWith(Names.named("default")).to(SmoothieExtensionLocator.class);
             install(new HudsonModule());
             
             for (Module module : modules) {
@@ -133,7 +144,9 @@ public class SmoothieContainerImpl
             bind(SmoothieContainer.class).toInstance(SmoothieContainerImpl.this);
             bind(ReflectionProvider.class).toInstance(reflection);
 
-            install(new SpaceModule(createClassSpace()));
+            ClassSpace space = createClassSpace();
+            install(new SpaceModule(space));
+            install(new SezPozExtensionModule(space));
             install(new HudsonModule());
         }
 

@@ -26,9 +26,7 @@ package com.sonatype.matrix.smoothie;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.sonatype.matrix.smoothie.injecto.internal.InjectomaticAspectHelper;
-import com.sonatype.matrix.smoothie.internal.ScanpathModule;
-import com.sonatype.matrix.smoothie.internal.SmoothieContainerImpl;
+import com.sonatype.matrix.smoothie.internal.SmoothieContainerBootstrap;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -46,14 +44,7 @@ public abstract class TestSupport
 
     @Before
     public void setUp() throws Exception {
-        ScanpathModule cp = new ScanpathModule(
-            getClass().getClassLoader(),
-            Smoothie.class,
-            getClass()
-        );
-
-        SmoothieUtil.installContainer(new SmoothieContainerImpl(cp, this));
-        InjectomaticAspectHelper.setEnabled(true);
+        new SmoothieContainerBootstrap().bootstrap(getClass().getClassLoader(), Smoothie.class, getClass());
     }
 
     public void configure(final Binder binder) {
